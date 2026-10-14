@@ -3,10 +3,10 @@
 把 PTA (pintia.cn) 的练习/考试自动化能力包成 MCP 服务（stdio），供 agent 调用。
 设计目标是**把解题以外的 token 消耗压到最低**：默认只回摘要、支持从工作目录读源码/答案、判题结果不必跳出 MCP 去写脚本。
 
-## 使用者快速开始（clone 后自带依赖，不需要作者的 .venv）
+## 使用者快速开始
 
 ```bash
-git clone https://github.com/<账号>/pta-auto-mcp.git && cd pta-auto-mcp
+git clone https://github.com/kisakiayano/PTA-mcp && cd PTA-mcp
 uv run server.py          # uv 自动创建 .venv 并按 uv.lock 装好依赖后启动
 ```
 
@@ -20,9 +20,6 @@ uv sync --no-dev          # 不要 lint 依赖（ruff），环境更小
 uv sync --frozen          # 严格按 uv.lock（CI/可复现）
 uvx --from . pta-mcp      # 连仓库目录都不留，直接跑
 ```
-
-仓库里**只提交** `pyproject.toml` + `uv.lock`；`.venv/`、`cookies.json`、`work/`、`dist/`、`*.egg-info/`
-都在 `.gitignore` 里，clone 下来是干净的 14 个文件（约 650 KB）。
 
 ## 工具（5 个）
 
@@ -93,9 +90,9 @@ pta_login.py         # 本地开发薄壳：uv run pta_login.py
 
 ```bash
 # 使用者（不装包，直接从仓库拉起）
-uvx --from git+https://github.com/<账号>/pta-auto-mcp pta-mcp
+uvx --from https://github.com/kisakiayano/PTA-mcp PTA-mcp
 # 或安装成全局命令
-uv tool install git+https://github.com/<账号>/pta-auto-mcp
+uv tool install git+https://github.com/kisakiayano/PTA-mcp
 
 # 开发者
 uv sync
@@ -111,7 +108,7 @@ MCP 客户端：
 {
   "mcpServers": {
     "pta": {
-      "command": "/home/ayano/pi_work/mcp_PTA/.venv/bin/pta-mcp",
+      "command": "/home/your/path/mcp_PTA/.venv/bin/pta-mcp",
       "env": { "PTA_EMAIL": "you@example.com", "PTA_PASSWORD": "***" }
     }
   }

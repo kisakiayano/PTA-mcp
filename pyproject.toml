@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pta-auto-mcp"
+dynamic = ["version"]
+description = "PTA (pintia.cn) 练习/考试自动化 MCP 服务：防水墙滑块纯协议求解 + 取题/提交"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["mcp", "model-context-protocol", "pta", "pintia", "captcha", "automation"]
+dependencies = [
+    "mcp>=2,<3",           # 2.x：FastMCP 已更名 MCPServer（1.x 不兼容）
+    "requests>=2.31.0",
+    "numpy>=1.24",
+    "pillow>=9.0",
+]
+
+[project.optional-dependencies]
+# 装了 cv2 时求解器自动优先使用（更快）；未装则走 Pillow 回退，定位结果一致
+cv2 = ["opencv-python-headless>=4.10.0.84"]
+
+[project.scripts]
+pta-mcp = "pta_auto_mcp.server:main"
+pta-login = "pta_auto_mcp.login:main"
+
+[tool.setuptools]
+packages = ["pta_auto_mcp"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pta_auto_mcp.__version__" }
+
+[dependency-groups]
+dev = ["ruff>=0.2.0"]
