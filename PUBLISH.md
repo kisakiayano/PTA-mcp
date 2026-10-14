@@ -73,6 +73,49 @@ uv sync && uv run server.py
 }
 ```
 
+本地部署（clone 到本机后跑，适合调试和改代码）——两种写法任选：
+
+```json
+{
+  "mcpServers": {
+    "pta": {
+      "command": "uv",
+      "args": ["run", "--directory", "/abs/path/to/PTA-mcp", "server.py"],
+      "env": { "PTA_EMAIL": "you@example.com", "PTA_PASSWORD": "***" }
+    }
+  }
+}
+```
+
+```json
+{
+  "mcpServers": {
+    "pta": {
+      "command": "/abs/path/to/PTA-mcp/.venv/bin/pta-mcp",
+      "env": { "PTA_EMAIL": "you@example.com", "PTA_PASSWORD": "***" }
+    }
+  }
+}
+```
+
+第二种写法需要先执行上一节 C 里的 `uv sync`；两种写法的差异：
+
+| 写法 | 启动开销 | 适合 |
+|---|---|---|
+| `uv run --directory ...` | 每次多约 1~2s（uv 校验 lock 与环境），必要时自动 `uv sync` | 换机器/换分支后忘同步也不会报错；依赖改了自动跟进 |
+| `.venv/bin/pta-mcp` | 最快（直接启动） | 环境已 `uv sync` 且不常改依赖 |
+
+两种都指向**同一份源码**：项目是 editable 安装，改 `pta_auto_mcp/*.py` 后立刻生效；只有改动依赖
+（`pyproject.toml`）后才需要重跑 `uv sync`。Windows 下路径用正斜杠或双反斜杠，且 venv 脚本位置是
+`.venv\\Scripts\\pta-mcp.exe`：
+
+```json
+{ "command": "C:/Users/me/PTA-mcp/.venv/Scripts/pta-mcp.exe" }
+```
+
+无论哪种写法，运行时状态都写在用户级目录（`~/.local/state/pta-auto-mcp/`，可用 `PTA_STATE_DIR` 改），
+不会污染 clone 出来的工作区。
+
 ## 四、运行时目录与环境变量
 
 | 变量 | 默认值 | 说明 |
