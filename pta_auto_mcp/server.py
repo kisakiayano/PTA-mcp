@@ -183,6 +183,33 @@ def pull_exam_set(problem_set_id: str, problem_types: list[str] | None = None, m
                  "counts": totals, "returned": len(problems), "problems": problems})
 
 
+def _from_wire(detail):
+    """把 PTA 报文里的 details 项转成扁平输入（兼容带/不带 detailKey 的写法）。"""
+    item = {"problem_set_problem_id": detail.get("problemSetProblemId") or detail.get("problem_set_problem_id")}
+    for key, value in detail.items():
+        if key in ("problemId", "problemSetProblemId"):
+            continue
+        if key in T.DETAIL_FIELD.values() and isinstance(value, dict):  # 展开 detailKey 里的 answer/answers/program
+            item.update(value)
+        else:
+            item[key] = value
+    return item
+
+
+def _expand(source):
+    """展开答案来源，支持三种写法：
+
+    1) 扁平列表   [{"problem_set_problem_id": "...", "type": "...", "answer": "B"}]
+    2) 报文式对象 {"problemType": "MULTIPLE_CHOICE", "details": [{"problemSetProblemId": "...", "answer": "B"}]}
+    3) 报文式列表 [{"problemType": "...", "details": [...]}, ...]
+    """
+    if isinstance(source, list):
+        return [item for entry in source for item in _expand(entry)]
+    if isinstance(source, dict) and "details" in source and "problemType" in source:
+        return [{"type": source["problemType"], **_from_wire(d)} for d in source["details"]]
+    return [source]
+
+
 def _normalize(item):
     """把一条宽松输入整形为 pta_tools 期望的结构，返回 (题型, 提交项, 编译器)。"""
     ptype = str(item.get("type") or item.get("problem_type") or "").upper()
@@ -209,8 +236,10 @@ def _normalize(item):
             raise PTAError("BAD_ANSWER_ITEM", f"单选题答案应为单个字母，收到 {raw!r}")
         return ptype, {"problemSetProblemId": str(pid), "answer": answer}, None
     if ptype == "MULTIPLE_CHOICE_MORE_THAN_ONE_ANSWER":
-        if isinstance(raw, str):  # 允许写成 "A,C" / "AC"
+        if isinstance(raw, str):  # 允许 "A,C" / "A C" / "AC"
             raw = [x for x in raw.replace(",", " ").replace(";", " ").split() if x]
+            if len(raw) == 1 and raw[0].isalpha():
+                raw = list(raw[0])  # 连写形式拆成单字母
         if not isinstance(raw, list) or not raw:
             raise PTAError("BAD_ANSWER_ITEM", f"多选题答案应为选项字母列表，收到 {raw!r}")
         return ptype, {"problemSetProblemId": str(pid),
@@ -238,17 +267,19 @@ def submit_answers(exam_id: str, answers: list[dict] | None = None, answers_file
     Args:
         exam_id: 考试 ID（来自 pta_list_exams）。
         answers: 答案列表；大体积答案用 answers_file 指向 work/ 下的 JSON，避免在对话里重复贴。
-        answers_file: work/ 下 JSON 文件路径（内容同 answers）。
+            也接受 PTA 报文式写法：{"problemType":"MULTIPLE_CHOICE","details":[{"problemSetProblemId":"...","answer":"B"}]}
+        answers_file: work/ 下 JSON 文件路径。文件里可以是上述任一写法，也可以是报文式写法的列表
+            （每个题型一段，适合整卷归档）。
         dry_run: True（默认）只回提交计划，确认后传 False。
     """
     try:
-        if not answers:
-            answers = json.loads(_read_work_file(answers_file) or "[]")
-        if not answers:
+        source = answers if answers else json.loads(_read_work_file(answers_file) or "[]")
+        items = _expand(source)
+        if not items:
             raise PTAError("EMPTY_ANSWERS", "answers 不能为空")
         batches: dict[str, list] = {}
         programs: list[tuple] = []
-        for item in answers:
+        for item in items:
             ptype, payload, compiler = _normalize(item)
             (programs.append((ptype, payload, compiler)) if ptype in WRITABLE
              else batches.setdefault(ptype, []).append(payload))
@@ -275,7 +306,7 @@ def submit_answers(exam_id: str, answers: list[dict] | None = None, answers_file
     except Exception as exc:
         return _out(_fail(exc))
 
-    return _out({"ok": True, "dry_run": False, "submitted": len(answers), "results": results})
+    return _out({"ok": True, "dry_run": False, "submitted": len(items), "results": results})
 
 
 @server.tool()

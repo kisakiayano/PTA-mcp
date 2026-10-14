@@ -48,6 +48,21 @@ submit_answers(..., dry_run=False)                    → submission_id（编程
 pta_submission_detail(exam_id, submission_id)         → 复查判题 / 看失败用例
 ```
 
+答案文件（`work/answers.json`）可以直接用 PTA 报文形状，按题型分段；工具会自动按题型整卷提交：
+
+```json
+[
+  {"problemType": "TRUE_OR_FALSE",
+   "details": [{"problemSetProblemId": "2104474233634361344", "answer": "TRUE"}]},
+  {"problemType": "MULTIPLE_CHOICE",
+   "details": [{"problemSetProblemId": "2104474233634361382", "answer": "B"},
+               {"problemSetProblemId": "2104474233634361383", "answer": "C"}]}
+]
+```
+
+字段规则：判断题 `answer` 用 `TRUE`/`FALSE`（也接受 `T`/`F`）；单选 `answer` 是单个字母；多选与填空题用
+`answers` 数组（填空题每空一项，答案里可以含逗号）；编程题用 `program` 或 `program_path`。
+
 ## 代码结构与运行时目录
 
 ```

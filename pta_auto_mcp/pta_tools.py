@@ -99,7 +99,7 @@ def pull_exam_set(exam_id:str):
 
 def submit_nonwritable(exam_id:str,batched_answer:dict,answer_type:str):
     '''submit objective answers: 单答案用 answer, 多答案/填空题用 answers.
-    your answer should be like:{"problemType":"MULTIPLE_CHOICE","details":[{"problemId":"0","problemSetProblemId":"2099334496411578418","multipleChoiceSubmissionDetail":{"answer":"C"}},{"problemId":"0","problemSetProblemId":"2099334496411578419","multipleChoiceSubmissionDetail":{"answer":"B"}}]}'''
+    your answer should be like:{"problemType":"MULTIPLE_CHOICE","details":[{"problemSetProblemId":"2099334496411578418","answer":"C"},{"problemSetProblemId":"2099334496411578419","answer":"B"}]}'''
     submit_Template={"problemType":answer_type,"details":[]}
     submit_Template["details"] = [
         {
