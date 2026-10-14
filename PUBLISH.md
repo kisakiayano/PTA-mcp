@@ -3,7 +3,7 @@
 ## 一、本地：把它变成一个可拉取的仓库
 
 ```bash
-cd /home/ayano/pi_work/mcp_PTA
+cd /path/to/PTA-mcp          # 你的本地仓库目录
 
 # 1) 确认不会把私密/本地产物带进仓库（.gitignore 已覆盖）
 git init -b main
@@ -13,7 +13,7 @@ git status --short           # 应看不到 .venv/ cookies.json work/ *.egg-info
 git add -A && git commit -m "feat: pta-auto-mcp 0.3.0"
 
 # 3) 推到远端（示例）
-git remote add origin git@github.com:<你的账号>/pta-auto-mcp.git
+git remote add origin git@github.com:kisakiayano/PTA-mcp.git
 git push -u origin main
 ```
 
@@ -28,14 +28,14 @@ uv publish                   # 需要 PyPI token
 
 ```bash
 # A. 不安装，直接用 uvx 从 git 拉起（最适合 MCP 客户端）
-uvx --from git+https://github.com/<账号>/pta-auto-mcp pta-mcp
+uvx --from git+https://github.com/kisakiayano/PTA-mcp pta-mcp
 
 # B. 安装成全局命令（放进 ~/.local/bin，附带独立环境）
-uv tool install git+https://github.com/<账号>/pta-auto-mcp
+uv tool install git+https://github.com/kisakiayano/PTA-mcp
 pta-mcp
 
 # C. 克隆后本地开发
-git clone https://github.com/<账号>/pta-auto-mcp && cd pta-auto-mcp
+git clone https://github.com/kisakiayano/PTA-mcp && cd PTA-mcp
 uv sync && uv run server.py
 ```
 
@@ -50,7 +50,7 @@ uv sync && uv run server.py
   "mcpServers": {
     "pta": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/<账号>/pta-auto-mcp", "pta-mcp"],
+      "args": ["--from", "git+https://github.com/kisakiayano/PTA-mcp", "pta-mcp"],
       "env": {
         "PTA_EMAIL": "you@example.com",
         "PTA_PASSWORD": "***"
@@ -89,8 +89,8 @@ uv sync && uv run server.py
 ## 五、仓库应包含 / 不应包含
 
 ```
-应包含: pyproject.toml  uv.lock  README.md  PUBLISH.md  PLATFORM_NOTES.md  LICENSE
-        pta_auto_mcp/{__init__,load,solve,login,server}.py
-        server.py pta_login.py（本地开发用的薄壳，可选）
+应包含: .gitignore  pyproject.toml  uv.lock  README.md  PUBLISH.md  PLATFORM_NOTES.md  LICENSE
+        pta_auto_mcp/{__init__,load,solve,login,pta_tools,server}.py
+        server.py（本地开发薄壳）
 不应包含: .venv/  cookies.json  work/  *.egg-info/  __pycache__/  dist/
 ```

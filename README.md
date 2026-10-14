@@ -58,7 +58,6 @@ pta_auto_mcp/
   login.py           # 登录 + 会话（reactive 验证码流程）
   server.py          # MCP 服务（5 工具，stdio）
 server.py            # 本地开发薄壳：uv run server.py
-pta_login.py         # 本地开发薄壳：uv run pta_login.py
 ```
 
 运行时状态**不写在包目录**（site-packages 可能只读），默认落在用户级状态目录：
@@ -90,7 +89,7 @@ pta_login.py         # 本地开发薄壳：uv run pta_login.py
 
 ```bash
 # 使用者（不装包，直接从仓库拉起）
-uvx --from https://github.com/kisakiayano/PTA-mcp PTA-mcp
+uvx --from git+https://github.com/kisakiayano/PTA-mcp pta-mcp
 # 或安装成全局命令
 uv tool install git+https://github.com/kisakiayano/PTA-mcp
 
@@ -108,7 +107,8 @@ MCP 客户端：
 {
   "mcpServers": {
     "pta": {
-      "command": "/home/your/path/mcp_PTA/.venv/bin/pta-mcp",
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/kisakiayano/PTA-mcp", "pta-mcp"],
       "env": { "PTA_EMAIL": "you@example.com", "PTA_PASSWORD": "***" }
     }
   }
