@@ -99,9 +99,14 @@ uv run server.py          # 等价于 pta-mcp
 uv run pta-login --help
 ```
 
-支持 Python >= 3.10，无需 cv2（`uv sync --extra cv2` 可选加速）。分发与客户端配置详见 `PUBLISH.md`。
+支持 Python >= 3.10，无需 cv2（`uv sync --extra cv2` 可选加速）。
 
-MCP 客户端：
+## MCP 客户端配置
+
+把下面任一段加进客户端的 `mcpServers`。`env` 里的凭据只在没有有效会话时用于首次登录，
+之后复用 `~/.local/state/pta-auto-mcp/cookies.json`。
+
+远程拉取（不安装，跟随仓库默认分支的最新提交）：
 
 ```json
 {
@@ -114,4 +119,38 @@ MCP 客户端：
   }
 }
 ```
+
+全局安装后（启动最快，无网络依赖）：
+
+```json
+{
+  "mcpServers": {
+    "pta": {
+      "command": "/home/<用户>/.local/bin/pta-mcp",
+      "env": { "PTA_EMAIL": "you@example.com", "PTA_PASSWORD": "***" }
+    }
+  }
+}
+```
+
+本地 clone 开发（改代码立即生效）：
+
+```json
+{
+  "mcpServers": {
+    "pta": {
+      "command": "uv",
+      "args": ["run", "--directory", "/abs/path/to/PTA-mcp", "server.py"],
+      "env": { "PTA_EMAIL": "you@example.com", "PTA_PASSWORD": "***" }
+    }
+  }
+}
+```
+
+也可先 `uv sync` 再指向 `/abs/path/to/PTA-mcp/.venv/bin/pta-mcp`（启动更快）；三种写法的启动开销
+差异与 Windows 路径写法见 `PUBLISH.md`。
+
+常用环境变量：`PTA_STATE_DIR`（状态根目录，默认 `~/.local/state/pta-auto-mcp`）、`PTA_COOKIE_FILE`、
+`PTA_WORK_DIR`、`PTA_MIN_LOGIN_INTERVAL`（登录限频，默认 20s）、`PTA_COMPACT_JSON`（设 0 返回结构化
+dict）；完整说明见 `PUBLISH.md` 第四节。
 
