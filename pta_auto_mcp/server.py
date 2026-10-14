@@ -185,31 +185,14 @@ def pull_exam_set(problem_set_id: str, problem_types: list[str] | None = None, m
                  "counts": totals, "returned": len(problems), "problems": problems})
 
 
-def _from_wire(detail):
-    """把 PTA 报文里的 details 项转成扁平输入（兼容带/不带 detailKey 的写法）。"""
-    item = {"problem_set_problem_id": detail.get("problemSetProblemId") or detail.get("problem_set_problem_id")}
-    for key, value in detail.items():
-        if key in ("problemId", "problemSetProblemId"):
-            continue
-        if key in T.DETAIL_FIELD.values() and isinstance(value, dict):  # 展开 detailKey 里的 answer/answers/program
-            item.update(value)
-        else:
-            item[key] = value
-    return item
-
-
 def _expand(source):
-    """展开答案来源，支持三种写法：
-
-    1) 扁平列表   [{"problem_set_problem_id": "...", "type": "...", "answer": "B"}]
-    2) 报文式对象 {"problemType": "MULTIPLE_CHOICE", "details": [{"problemSetProblemId": "...", "answer": "B"}]}
-    3) 报文式列表 [{"problemType": "...", "details": [...]}, ...]
-    """
+    """展开答案来源：{"problemType": "...", "details": [...]} 或其列表（每题型一段）。"""
     if isinstance(source, list):
         return [item for entry in source for item in _expand(entry)]
-    if isinstance(source, dict) and "details" in source and "problemType" in source:
-        return [{"type": source["problemType"], **_from_wire(d)} for d in source["details"]]
-    return [source]
+    if not isinstance(source, dict) or "problemType" not in source or "details" not in source:
+        raise PTAError("BAD_ANSWERS", '答案需形如 {"problemType":"...","details":[...]}（或其列表，每个题型一段）')
+    return [{"type": source["problemType"], "problem_set_problem_id": d.get("problemSetProblemId"),
+             **{k: v for k, v in d.items() if k != "problemSetProblemId"}} for d in source["details"]]
 
 
 def _normalize(item):
@@ -254,24 +237,19 @@ def _normalize(item):
 
 
 @server.tool()
-def submit_answers(exam_id: str, answers: list[dict] | None = None, answers_file: str = "",
+def submit_answers(exam_id: str, answers: dict | list[dict] | None = None, answers_file: str = "",
                    dry_run: bool = True):
     """提交答案：客观题按题型整卷提交，编程题逐题提交并回传判题结果。
 
-    answers 每项（type 必填）：
-        {"problem_set_problem_id": "...", "type": "MULTIPLE_CHOICE", "answer": "B"}
-        {"problem_set_problem_id": "...", "type": "TRUE_OR_FALSE", "answer": "T"}
-        {"problem_set_problem_id": "...", "type": "MULTIPLE_CHOICE_MORE_THAN_ONE_ANSWER", "answers": "A,C"}
-        {"problem_set_problem_id": "...", "type": "FILL_IN_THE_BLANK", "answers": ["第一空", "第二空"]}
-        {"problem_set_problem_id": "...", "type": "PROGRAMMING", "program_path": "programs/p1.py"}
-        {"problem_set_problem_id": "...", "type": "PROGRAMMING", "program": "print(1)", "compiler": "PYTHON3"}
+    答案形如（每个题型一段，可给列表）：
+        {"problemType": "TRUE_OR_FALSE",   "details": [{"problemSetProblemId": "...", "answer": "TRUE"}]}
+        {"problemType": "MULTIPLE_CHOICE", "details": [{"problemSetProblemId": "...", "answer": "B"}]}
+        {"problemType": "PROGRAMMING",      "details": [{"problemSetProblemId": "...", "program_path": "programs/p1.py"}]}
 
     Args:
         exam_id: 考试 ID（来自 pta_list_exams）。
-        answers: 答案列表；大体积答案用 answers_file 指向 work/ 下的 JSON，避免在对话里重复贴。
-            也接受 PTA 报文式写法：{"problemType":"MULTIPLE_CHOICE","details":[{"problemSetProblemId":"...","answer":"B"}]}
-        answers_file: work/ 下 JSON 文件路径。文件里可以是上述任一写法，也可以是报文式写法的列表
-            （每个题型一段，适合整卷归档）。
+        answers: 上述结构（或它们的列表）；大体积答案用 answers_file 指向 work/ 下的 JSON，避免在对话里重复贴。
+        answers_file: work/ 下 JSON 文件路径，内容同 answers（整卷归档时给列表，每个题型一段）。
         dry_run: True（默认）只回提交计划，确认后传 False。
     """
     try:

@@ -42,8 +42,9 @@ pull_exam_set(problem_set_id, mode="index")           → 题量与题面首行
 pull_exam_set(problem_set_id, problem_types=["PROGRAMMING"],
               mode="digest", limit=20)                → 按题型取题面
 # 编程题：源码写到 work/programs/pN.py，本地用题目样例自测
-submit_answers(exam_id, answers=[{"problem_set_problem_id": "...", "type": "PROGRAMMING",
-                                  "program_path": "programs/p1.py"}], dry_run=True)
+submit_answers(exam_id, answers={"problemType": "PROGRAMMING",
+                                  "details": [{"problemSetProblemId": "...", "program_path": "programs/p1.py"}]},
+               dry_run=True)
 submit_answers(..., dry_run=False)                    → submission_id（编程题同时回判题结果）
 pta_submission_detail(exam_id, submission_id)         → 复查判题 / 看失败用例
 ```
