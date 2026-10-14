@@ -280,6 +280,12 @@ def submit_answers(exam_id: str, answers: dict | list[dict] | None = None, answe
                             "submission_id": (response or {}).get("submissionId")})
         for ptype, payload, compiler in programs:
             status = T.submit_writable(exam_id, {"details": [payload]}, ptype, compiler) or {}
+            for _ in range(2):  # 判题异步（约 1s），最多再等 2 秒，避免只拿到 WAITING
+                if status.get("submission_id") and status.get("status") in (None, "WAITING"):
+                    time.sleep(1)
+                    status = T.check_program_status(exam_id, status["submission_id"]) or status
+                else:
+                    break
             results.append({"type": ptype, "problem_set_problem_id": payload["problemSetProblemId"],
                             "submission_id": status.get("submission_id"), "status": status.get("status"),
                             "score": status.get("score"), "failing": status.get("failing")})
