@@ -1,30 +1,6 @@
 # 分发与安装
 
-## 一、本地：把它变成一个可拉取的仓库
-
-```bash
-cd /path/to/PTA-mcp          # 你的本地仓库目录
-
-# 1) 确认不会把私密/本地产物带进仓库（.gitignore 已覆盖）
-git init -b main
-git status --short           # 应看不到 .venv/ cookies.json work/ *.egg-info
-
-# 2) 首次提交
-git add -A && git commit -m "feat: pta-auto-mcp 0.3.0"
-
-# 3) 推到远端（示例）
-git remote add origin git@github.com:kisakiayano/PTA-mcp.git
-git push -u origin main
-```
-
-可选：发布到 PyPI 后，使用者就能直接用包名安装（否则用 git 地址也可以）：
-
-```bash
-uv build                     # 产出 dist/*.whl 与 *.tar.gz
-uv publish                   # 需要 PyPI token
-```
-
-## 二、使用者侧安装（三种方式，任选）
+## 使用者侧安装（三种方式，任选）
 
 ```bash
 # A. 不安装，直接用 uvx 从 git 拉起（最适合 MCP 客户端）
@@ -39,9 +15,7 @@ git clone https://github.com/kisakiayano/PTA-mcp && cd PTA-mcp
 uv sync && uv run server.py
 ```
 
-发布到 PyPI 之后，A/B 可简化为 `uvx pta-auto-mcp` / `uv tool install pta-auto-mcp`。
-
-## 三、MCP 客户端配置
+## MCP 客户端配置
 
 推荐用 uvx（不用预先安装，uv 自动建隔离环境并拉取依赖）：
 
