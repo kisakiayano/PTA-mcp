@@ -63,6 +63,10 @@ pta_submission_detail(exam_id, submission_id)         → 复查判题 / 看失�
 字段规则：判断题 `answer` 用 `TRUE`/`FALSE`（也接受 `T`/`F`）；单选 `answer` 是单个字母；多选与填空题用
 `answers` 数组（填空题每空一项，答案里可以含逗号）；编程题用 `program` 或 `program_path`。
 
+按题型分段的写法比"每题都带 `type`"省约 30%，再配合 `answers_file`：整卷提交的调用参数从约 1.6k tokens
+降到约 20 tokens（答案只在写文件时出现一次）。取题同理：`mode="index"` 先看概览，只对未完成的题型
+`mode="digest"` 取题面（digest 只回题面，首行即标题）。
+
 ## 代码结构与运行时目录
 
 ```

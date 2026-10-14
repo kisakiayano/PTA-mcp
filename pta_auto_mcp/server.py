@@ -159,7 +159,7 @@ def pull_exam_set(problem_set_id: str, problem_types: list[str] | None = None, m
     Args:
         problem_set_id: 题目集 ID（来自 pta_list_exams）。
         problem_types: 只要这些题型，缺省全部。
-        mode: index 只回 id/题型/标题；digest 加题面（截断）；content 题面更长。
+        mode: index 只回 id/题型/标题（概览）；digest 只回题面（首行即标题）；content 题面更长。
         offset / limit: 分页，limit=0 表示全部（digest 建议 15~30）。
         max_content_chars: 题面截断长度。
     """
@@ -174,9 +174,11 @@ def pull_exam_set(problem_set_id: str, problem_types: list[str] | None = None, m
             continue
         totals[ptype] = len(items)
         for item in items[offset:] if limit <= 0 else items[offset:offset + limit]:
-            record = {"id": item["id"], "type": ptype, "title": _title_of(item.get("content"))}
-            if mode != "index":
-                record["content"] = (item.get("content") or "")[:max_content_chars]
+            record = {"id": item["id"], "type": ptype}
+            if mode == "index":
+                record["title"] = _title_of(item.get("content"))  # 概览模式只给首行
+            else:
+                record["content"] = (item.get("content") or "")[:max_content_chars]  # 首行即标题，不重复给
             problems.append(record)
 
     return _out({"ok": True, "problem_set_id": problem_set_id,
