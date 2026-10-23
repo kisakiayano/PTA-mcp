@@ -102,7 +102,9 @@ server.py            # 本地开发薄壳：uv run server.py
 4. **精度**：题目未写明小数位时，答案键通常是"原始浮点字符串"，不要自行四舍五入（`温度转换` 一题即因此 WA）。
 5. **风控窗口**：短时间多次失败登录或高频解票会被网关统一拒绝（票据在腾讯侧有效也照样返回
    `GATEWAY_WRONG_CAPTCHA`）。`pta_login` 内置 20s 限频；命中窗口应换出口 IP 或等待。
-6. **取题不需要 exam_id**：按题型取题的接口只依赖 `problem_set_id`；`exam_id` 仅在提交
+6. **选项可能只存在 problemConfig 里**：部分选择题的 `content` 只有题干，选项在
+   `problemConfig.*Config.choices`；`pull_exam_set` 会在题面末尾补齐 `A. … B. …`（已有 `A.` 标记的不重复补）。
+7. **取题不需要 exam_id**：按题型取题的接口只依赖 `problem_set_id`；`exam_id` 仅在提交
    （`/api/exams/{exam_id}/exam-submissions`）与查判题结果时使用。
 
 ## 安装与运行

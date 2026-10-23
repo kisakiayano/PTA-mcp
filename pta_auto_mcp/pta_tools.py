@@ -85,9 +85,13 @@ def pull_exam_set(exam_id:str):
         content = session.get(f"/api/problem-sets/{exam_id}/exam-problems", params={"problem_type": ptype})
         for p in content.get("problemSetProblems", []):
             pid = p["id"]
+            # 部分选择题的选项只存在 problemConfig 里（content 只有题干），一并带出
+            choices = next((v["choices"] for v in (p.get("problemConfig") or {}).values()
+                            if isinstance(v, dict) and v.get("choices")), None)
             problem_set.setdefault(ptype, []).append({
                 "id": pid,
                 "content": p.get("content", ""),
+                "choices": choices,
             })
     sum_up={k: len(v) for k, v in problem_set.items()}
     if summaries_check(exam_id,sum_up):

@@ -6,6 +6,7 @@
 
 import json
 import logging
+import re
 import os
 import threading
 import time
@@ -78,6 +79,16 @@ def _sync_session(session):
 
 def _brief(user):
     return {k: user.get(k) for k in ("id", "nickname", "activate", "banned")}
+
+
+_OPTION_START = re.compile(r"(?m)^\s*A\s*[.．、]")
+
+
+def _with_options(content, choices):
+    """题面里没有 A/B/C… 选项标记时补上（部分题目的选项只存在 problemConfig 里）。"""
+    if not choices or _OPTION_START.search(content):
+        return content
+    return content + "\n" + "\n".join(f"{chr(65 + i)}. {c}" for i, c in enumerate(choices))
 
 
 def _title_of(content, width=50):
@@ -178,7 +189,8 @@ def pull_exam_set(problem_set_id: str, problem_types: list[str] | None = None, m
             if mode == "index":
                 record["title"] = _title_of(item.get("content"))  # 概览模式只给首行
             else:
-                record["content"] = (item.get("content") or "")[:max_content_chars]  # 首行即标题，不重复给
+                content = _with_options(item.get("content") or "", item.get("choices"))
+                record["content"] = content[:max_content_chars]
             problems.append(record)
 
     return _out({"ok": True, "problem_set_id": problem_set_id,
